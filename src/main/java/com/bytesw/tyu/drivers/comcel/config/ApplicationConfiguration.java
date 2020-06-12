@@ -14,9 +14,6 @@ import com.bytesw.tyu.drivers.comcel.config.Properties.As400System;
 import com.bytesw.tyu.drivers.comcel.obj.Monitor;
 import com.bytesw.tyu.drivers.connection.ConnectionManager;
 import com.bytesw.tyu.drivers.connection.impl.DefaultConnectionManager;
-import com.bytesw.tyu.drivers.queue.DefaultQueueManager;
-import com.bytesw.tyu.drivers.queue.QueueManager;
-import com.bytesw.tyu.drivers.queue.model.Queue;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,12 +40,6 @@ public class ApplicationConfiguration {
     @Bean
     public ScheduledExecutorService scheduledExecutorService() {
         return new ScheduledThreadPoolExecutor(4);
-    }
-
-    @Bean
-    public QueueManager<Queue> queueManager(
-            ConnectionManager connectionManager, ExecutorService executorService) {
-        return new DefaultQueueManager(connectionManager, executorService);
     }
 
     @Bean
