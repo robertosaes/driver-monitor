@@ -1,0 +1,50 @@
+server:
+  servlet:
+    context-path: /
+    
+    
+app: 
+  timeout: 5000
+  vendorCode: 3
+  distributorCode: ARSE
+  as400-system:
+    system-name: 172.24.229.10
+    username: JOESCOBAR
+    password: comcel
+    jdbc-libraries: QGPL
+    programs:
+      CREATE_ORDER:
+        pgm-library: QSTCPGM
+        pgm-name: O1GEN002
+        
+spring:
+  rabbitmq:
+    host: 172.22.91.218
+    port: 15672
+    username: sfactory_byte
+    password: Rabb!t19
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    continue-on-error: true
+    url: jdbc:as400://172.24.229.10;naming=system;libraries=STCONETV2:QSTCDAT:INVDAT;transaction isolation=none;naming=system;trace=false;prompt=false;errors=full
+    driver-class-name: com.ibm.as400.access.AS400JDBCDriver
+    username: JOESCOBAR
+    password: comcel
+    hikari:
+      pool-name: localhost-pool
+      auto-commit: true
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-test-query: SELECT * FROM V1PARM
+      max-lifetime: 30000 
+
+jsa:
+  rabbitmq:
+    exchange: home.upsellatv.out
+    queue: home.upsellatv.queue04
+    routingKey: 
+    
+logging:
+  register-shutdown-hook: true
+  level:
+    com.ibm.as400: error
