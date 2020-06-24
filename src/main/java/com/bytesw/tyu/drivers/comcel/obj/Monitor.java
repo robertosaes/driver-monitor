@@ -8,6 +8,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -69,8 +70,8 @@ public class Monitor {
 
     private static final String INSERT_L1SERDET = "INSERT INTO L1SERDET("
     		+ "LOCCOD, SULOCO, TCNTEL, TCSERV, TCVSER, TCSMOU, TCASES, TCMSES, TCDSES, TCCVEN, TCDAES, TCDMES, "
-    		+ "TCDDES, TCCVDI, LOUSER, LODSP, LODIA, LOMES, LOAÑO, LOTIME, LOTRX, LOPGM, TRXCOD,) " + 
-    		"  VALUES(1.0, 1.0, ?, ?, ?, 'M', ?, ?, ?, ?, 0, 0, 0, ?, 'DRIVERJAVA', 'DRVRONETV2', ?, ?, ?, ?, ?, 'DRVRONETV2', ' ',)";
+    		+ "TCDDES, TCCVDI, LOUSER, LODSP, LODIA, LOMES, LOAÑO, LOTIME, LOTRX, LOPGM, TRXCOD) " + 
+    		"  VALUES(1, 1, ?, ?, ?, 'M', 0, 0, 0, ?, ?, ?, ?, ?, 'DRIVERJAVA', 'DRVRONETV2', ?, ?, ?, ?, ?, 'DRVRONETV2', ' ')";
     
     private static final String DELETE_V1SERDET = "DELETE FROM V1SERDET WHERE TCNTEL = ? AND TCSERV = ?";
     
@@ -120,11 +121,12 @@ public class Monitor {
 						jdbcTemplate.update(
 								UPDATE_V1PPCTRL, 
 						new Object[] { 
-									o1oaslog.getO1txt(),
+									o1oaslog.getO1txt().trim(),
 									anho,
 									mes,
 									dia,
-									tiempo}) > 0;
+									tiempo,
+									orden.getNumeroOrden()}) > 0;
 									
 				if ("P".equalsIgnoreCase(o1oaslog.getO1acto().trim())) {
 					
@@ -137,7 +139,7 @@ public class Monitor {
 					if ("alta".equalsIgnoreCase(orden.getTipoOa())) {
 						boolean insertV1serdet = jdbcTemplate.update(
 						INSERT_V1SERDET, 
-						new Object[] { orden.getMsisdn(), 
+						new Object[] { orden.getMsisdn().trim(), 
 									orden.getCodigoServicio(),
 									orden.getValorServicio(),
 									anho,
@@ -160,17 +162,17 @@ public class Monitor {
 
 					boolean insertL1serdet = jdbcTemplate.update(
 							INSERT_L1SERDET, 
-							new Object[] { orden.getMsisdn(), 
+							new Object[] { orden.getMsisdn().trim(), 
 										orden.getCodigoServicio(),
 										orden.getValorServicio(),
-										anho,
-										mes,
-										dia,
 										properties.getVendorCode(),
-										properties.getDistributorCode(),
 										anho,
 										mes,
 										dia,
+										properties.getDistributorCode(),
+										dia,
+										mes,
+										anho,
 										tiempo,
 										"alta".equalsIgnoreCase(orden.getTipoOa())?"AN":("baja".equalsIgnoreCase(orden.getTipoOa())?"BS":" ")}) > 0;
 
@@ -178,12 +180,12 @@ public class Monitor {
 				
 				
 				RabbitMQMessage message = RabbitMQMessage.builder()
-						.msisdn(Long.parseLong(orden.getMsisdn()))
+						.msisdn(Long.parseLong(orden.getMsisdn().trim()))
 						.contrato(orden.getCentroCostos())
 						.tipo(orden.getTipoOa())
 						.nroorden(orden.getNumeroOrden())
-						.coodigosuplem(Integer.parseInt(orden.getCodigoServicio()))
-						.resultado(o1oaslog.getO1txt())
+						.coodigosuplem(Integer.parseInt(orden.getCodigoServicio().trim()))
+						.resultado(o1oaslog.getO1txt().trim())
 						.timestamp(sdf1.format(calendar.getTime()))
 						.build();
 
@@ -196,7 +198,11 @@ public class Monitor {
 			} else {
 				System.out.println("No existe el registro en O1OASLOG numeroOrden["+orden.getNumeroOrden()+"]");
 			}
-		} catch (Exception e) {
+		} catch (EmptyResultDataAccessException erdae) {
+			System.out.println("No existe el registro en O1OASLOG numeroOrden["+orden.getNumeroOrden()+"]");
+
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
     	
